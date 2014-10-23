@@ -1,0 +1,49 @@
+/*********
+Small cases: Pass
+Large cases: Time limit exceeds
+
+深度优先搜索，时间复杂度与图的分支系数b有关
+这个分支系数吧，按我的理解应该是平均一个节点的邻接节点的个数，
+显然，完全图的分支系数应该是最大的；而一个二叉树的系数应该是最小的。
+深度优先搜索的复杂度是：O(b^m)，其中m是搜索的最大深度。
+以二叉树为例，时间复杂度O(2^log(n)) = O(n)，这正是二叉树遍历的时间复杂度。
+可以想见，当分支系数很大时，算法性能是不可接受的。
+*/
+class Solution {
+public:
+    int ladderLength(string start, string end, unordered_set<string> &dict) {
+        int min = INT_MAX;
+        unordered_set<string> visited;
+        visited.insert(start);
+        helper(start,end,dict,visited,1,min);
+        
+        if(min == INT_MAX)
+            return 0;
+        else
+            return min;
+    }
+private:
+    void helper(string start, string end, 
+            unordered_set<string> &dict, 
+            unordered_set<string> &visited, 
+            int length, int &min) {
+        if(start == end) {
+            min = min < length ? min : length;
+            return;
+        }
+        
+        for(int i = 0; i < start.size(); i++) {
+            char tmp = start[i];
+            for(int j = 0; j < 26; j++) {
+                start[i] = 'a' + j;
+                if(dict.find(start) != dict.end() 
+                        && visited.find(start) == visited.end()) {
+                    visited.insert(start);
+                    helper(start,end,dict,visited,length+1,min);
+                    visited.erase(visited.find(start));
+                }
+            }
+            start[i] = tmp;
+        }
+    }
+};
