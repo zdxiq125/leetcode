@@ -3,10 +3,11 @@ Small Case: Pass
 Large Case: Time limit exceeds
 
 与word_ladder十分相似，只不过需要把ladder整个存下来。
-由于需要保存整个ladder，所以DFS应该是最合适的，每次可以找出一条ladder
+由于需要保存整个ladder，所以DFS应该是最合适的，每次可以找出一条ladder。
 处理递归出口时只需要注意，我们只想要shortest transformation sequence
 那么如果找到一条更短的，返回值ret中所有sequence都应该清空，
 而找到等长的sequence，直接放进ret就行了。
+可是DFS在图的连通度比较高的时候性能还是不可接受。
 */
 class Solution {
 public:
@@ -59,4 +60,81 @@ private:
             start[i] = tmp;
         }
     }
+};
+
+/*********
+
+BFS的主要难点在于如何存储之前遍历过的节点。
+对于BFS而言，到达过的字符串就出队了，所以我们需要额外的空间来记录一个字符串的前驱字符串。
+形同与链表的形式，这样我们在到达end后，才有可能打印出整条路径。
+这就需要额外的空间复杂度，如果遍历深度是d，每个节点度为m，差不多需要O(m*d)的空间。
+注意，前驱表是以一个string作为key的，但是同一个string可能有多个前驱
+*/
+class Solution {
+public:
+    vector<vector<string>> findLadders(string start, string end, unordered_set<string> &dict) {
+		if(dict.empty())
+			return vector<vector<string> >();
+		if(start == end)
+			return vector<vector<string> >(1,vector<string>(1,start));
+		
+		//记录一个string的前驱
+		unordered_map<string,string> MapPrev;
+		vector<vector<string> > ret;
+		queue<string> q;
+		unordered_set<string> visited;
+		q.push(start);
+		visited.insert(start);
+		MapPrev.insert(make_pair(start,""));
+		//count代表当前阶段BFS找到的节点数
+		int count = 1, length = 1;
+		while(!q.empty()) {
+			int max = count, i = 0;
+			count = 0;
+			while(i < max) {
+				string des_str = q.front();
+				q.pop();
+				//改变des_str的每一位
+				for(int p = 0; p < des_str.size(); p++) {
+					char cur = des_str[p];
+					for(char ch = 'a'; ch <= 'z'; ch++) {
+						des_str[p] = ch;
+						//如果找到end
+						if(des_str == end) {
+							vector<string> ladder;
+							ladder.resize(length+1);
+							ladder[length] = end;
+							int index = length - 1;
+							string str = recover(des_str,p,cur);
+							while(index >= 0) {
+								ladder[index--] = str;
+								str = MapPrev[str];
+							}
+							ret.push_back(ladder);
+						}
+						//在字典中找到且没有访问过
+						if(dict.find(des_str) != dict.end() && visited.find(des_str) == visited.end()) {
+							q.push(des_str);
+							visited.insert(des_str);
+							MapPrev.insert(make_pair(des_str,recover(des_str,p,cur)));
+							count++;
+						}
+					}
+					des_str[p] = cur;
+				}
+				i++;
+			}
+			if(!ret.empty())
+				return ret;
+			length++;
+		}
+		
+		return ret;
+	}
+	//返回当前趟数下的原字符串
+	string recover(string str, int p, char ch) {
+		string ret = str;
+		ret[p] = ch;
+		return ret;
+	}
 };
