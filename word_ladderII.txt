@@ -1,0 +1,62 @@
+/****************
+Small Case: Pass
+Large Case: Time limit exceeds
+
+与word_ladder十分相似，只不过需要把ladder整个存下来。
+由于需要保存整个ladder，所以DFS应该是最合适的，每次可以找出一条ladder
+处理递归出口时只需要注意，我们只想要shortest transformation sequence
+那么如果找到一条更短的，返回值ret中所有sequence都应该清空，
+而找到等长的sequence，直接放进ret就行了。
+*/
+class Solution {
+public:
+    vector<vector<string>> findLadders(string start, string end, unordered_set<string> &dict) {
+        int min = INT_MAX;
+        vector<vector<string>> ret;
+        vector<string> ladder;
+        unordered_set<string> visited;
+        visited.insert(start);
+        
+        helper(start,end,ret,ladder,dict,visited,1,min);
+        return ret;
+    }
+private:
+    void helper(string start, string end,
+            vector<vector<string>> &ret,
+            vector<string> ladder,
+            unordered_set<string> &dict, 
+            unordered_set<string> &visited, 
+            int length, int &min) {
+        if(start == end) {
+            if(min < length)
+                return;
+            else if(min > length) {
+                min = length;
+                ret.clear();
+                ret.push_back(ladder);
+                return;
+            }
+            else {
+                ret.push_back(ladder);
+                return;
+            }
+        }
+        
+        for(int i = 0; i < start.size(); i++) {
+            char tmp = start[i];
+            for(int j = 0; j < 26; j++) {
+                start[i] = 'a' + j;
+                if(dict.find(start) != dict.end() 
+                        && visited.find(start) == visited.end()) {
+                    ladder.push_back(start);
+                    visited.insert(start);
+                    helper(start,end,ret,ladder,dict,visited,length+1,min);
+                    
+                    visited.erase(visited.find(start));
+                    ladder.pop_back();
+                }
+            }
+            start[i] = tmp;
+        }
+    }
+};
